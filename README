@@ -48,6 +48,14 @@ ok: data readed
 FooBar
 Test finished
 
+If timeout expires we'll see that timeout callback was triggered:
+
+Serial::Serial() : /dev/pts/10
+Connected...
+time_out callback!
+read_complete callback!
+Test finished
+
 == ASYNC READ TEST ==
 
 $ ./BoostSerialWrapper /dev/pts/10 NOBLOCK

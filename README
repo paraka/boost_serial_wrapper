@@ -1,0 +1,57 @@
+= Introduction =
+This is a simple wrapper over boost::asio::serial_port library for common
+operations when serial port want to be used.
+
+= How it works =
+
+There are two working modes: blocking read and async read. All of write operations
+in serial port will block. Default working mode is prepared to use async one and run 
+in its own thread. To start this you only have to open serial port and call start_async_reception().
+
+The way of chaging this behaviour is to set true in the second parameter of constructor.
+
+The main.cpp stupid test code is pretty self expanatory. Please, feel free to take a look.
+
+= Compile =
+
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+
+= Test =
+
+Create two serial virtual ports with socat in a terminal.
+
+$ socat -d -d pty,raw,echo=0 pty,raw,echo=0
+
+2016/11/11 20:54:24 socat[12485] N PTY is /dev/pts/10
+2016/11/11 20:54:24 socat[12485] N PTY is /dev/pts/11
+2016/11/11 20:54:24 socat[12485] N starting data transfer loop with FDs [3,3] and [5,5]
+
+== BLOCKING READ TEST ==
+Test blocking read in other terminal (test program expects to read 6 bytes 
+and timeout has been set for 5 seconds):
+
+$ ./BoostSerialWrapper /dev/pts/10 BLOCK
+
+In other terminal write in virtual serial port:
+
+$ echo "FooBar" > /dev/pts/11 
+
+If we are fast enough we cold see something like:
+
+Serial::Serial() : /dev/pts/10
+Connected...
+read_complete callback!
+ok: data readed
+FooBar
+Test finished
+
+== ASYNC READ TEST ==
+
+$ ./BoostSerialWrapper /dev/pts/10 NOBLOCK
+
+Async read will read until delimiter found which is "\r\n" by default.
+
+Because two signals has been connected readed data will be notified inside the lambda stuff.

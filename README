@@ -8,9 +8,91 @@ There are two working modes: blocking read and async read. All of write operatio
 in serial port will block. Default working mode is prepared to use async one and run 
 in its own thread. To start this you only have to open serial port and call start_async_reception().
 
-The way of chaging this behaviour is to set true in the second parameter of constructor.
+The way of chaging this behaviour is to set true in the second parameter of constructor:
 
-The main.cpp stupid test code is pretty self expanatory. Please, feel free to take a look.
+explicit Serial(const std::string &port_name, bool blocking_reader = false);
+
+By default when you open a connection with desired serial port the following
+configuration is set:
+
+* baud rate: 115200
+* parity: none
+* characther size: 8
+* stop bits: one
+* flow control: none
+
+You can use set methods to change this, but you have to do it after
+opening serial port:
+
+ // serial port parity configuration
+enum class parity_type { NONE, ODD, EVEN };
+
+void set_parity(parity_type parity);
+
+// serial port stop bits consfiguration
+enum class stop_bits_type { ONE, ONEPOINTFIVE, TWO };
+
+void set_stop_bits(stop_bits_type stop_bits);
+
+// serial port flow control configuration
+enum class flow_control_type { NONE, HARDWARE, SOFTWARE };
+
+void set_flow_control(flow_control_type flow_control);
+
+// serial port character size configuration
+void set_character_size(unsigned int size);
+
+// serial port baud rate configuration
+void set_baud_rate(unsigned int baud_rate);
+
+Example:
+
+Serial serial("/dev/ttyS0")
+
+serial.open();
+
+if (serial.is_open())
+{
+    serial.set_parity(Serial::parity_type::ODD);
+
+    ...
+}
+
+The asyncronous read stuff is thought to read continuously until delimiter and
+notify readed bytes or errors. It will run in its own thread and to be able to
+get readed stuff or errors there are two signals that you can connect to. 
+These are defined as follows:
+
+// will be emited when async data is being received
+boost::signals2::signal<void(std::string)> on_data_recv;
+
+// will be emited when async data reception get an error
+boost::signals2::signal<void(std::string)> on_error_receiving_data;
+
+Example:
+
+...
+
+serial.on_data_recv.connect(
+        [](std::string data)
+        {
+            std::cout << data << std::endl;
+        });
+
+serial.on_error_receiving_data.connect(
+        [](std::string error)
+        {
+            std::cout << error << std::endl;
+        });
+
+...
+
+By default delimiter is "\r\n". You can change it with set_delimiter() method:
+
+// set delimiter to read until in async connection
+void set_delimiter(const std::string &delim); 
+
+For more details feel free to take a look to the source code.
 
 = Compile =
 
